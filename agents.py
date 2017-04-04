@@ -480,7 +480,32 @@ def test_agent(AgentFactory, steps, envs):
         print('test_agent' , env)
         return agent.performance
 
-    return mean(map(score, envs))
+    #return mean(map(score, envs))
+    return None
+
+def test_agent(explorer, steps, wEnv):
+    """Return the mean score of running an agent in each of the envs, for steps"""
+    count = 0
+    while(count <= steps):
+        print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
+        wEnv.step()
+        print wEnv.percept(explorer)
+        print wEnv.to_string()
+        print 'Sense the environment', wEnv.percept(explorer)
+        percept2 = wEnv.percept(explorer)
+        pvec = explorer.raw_percepts_to_percept_vector(percept2)
+        senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
+        print 'Environment', senses;
+        count = count + 1
+    def score(env):
+        agent = AgentFactory()
+        env.add_thing(agent)
+        env.run(steps)
+        print('test_agent' , env)
+        return agent.performance
+
+    #return mean(map(score, envs))
+    return None
 
 
 __doc__ += "\n>>> a = ReflexVacuumAgent()\n>>> a.program((loc_A, 'Clean'))\n'Right'\n>>> a.program((loc_B, 'Clean'))\n'Left'\n>>> a.program((loc_A, 'Dirty'))\n'Suck'\n>>> a.program((loc_A, 'Dirty'))\n'Suck'\n\n>>> e = TrivialVacuumEnvironment()\n>>> e.add_thing(ModelBasedVacuumAgent())\n>>> e.run(5)\n\n## Environments, and some agents, are randomized, so the best we can\n## give is a range of expected scores.  If this test fails, it does\n## not necessarily mean something is wrong.\n>>> envs = [TrivialVacuumEnvironment() for i in range(100)]\n>>> def testv(A): return test_agent(A, 4, copy.deepcopy(envs))\n>>> 7 < testv(ModelBasedVacuumAgent) < 11\nTrue\n>>> 5 < testv(ReflexVacuumAgent) < 9\nTrue\n>>> 2 < testv(TableDrivenVacuumAgent) < 6\nTrue\n>>> 0.5 < testv(RandomVacuumAgent) < 3\nTrue\n"
@@ -2762,13 +2787,12 @@ explorer = Explorer(heading='north', verbose=True)
 explorer.heading = 0 #North
 wEnv.add_thing(explorer, (2,2))
 print 'Explorer Location: ', explorer.location
-print
-print wEnv.to_string()
+
 #explorer = W.Explorer(heading='north', verbose=True)
 
 #print 'Step made'
 #print wEnv.to_string()
-
+print '-------------------------#2&3 Percept, Sense the Environment---------\n'
 percept2 = wEnv.percept(explorer)
 #enviro.to_string
 #percept_vector = [None, None, None, None, None]
@@ -2778,27 +2802,29 @@ print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forw
 #wEnv.step()
 print wEnv.percept(explorer)
 print wEnv.to_string()
-print('-------------------------Manual Simulation----------------')
+print('-------------------------Manual Simulation----------------\n')
 while(True):
     print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
     wEnv.step()
     print wEnv.percept(explorer)
     print wEnv.to_string()
-    print wEnv.percept(explorer)
+    print 'Sense the environment', wEnv.percept(explorer)
     percept2 = wEnv.percept(explorer)
     pvec = explorer.raw_percepts_to_percept_vector(percept2)
-    print explorer.pretty_percept_vector(pvec);
+    senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
+    print 'Environment', senses;
     n = raw_input("\nTo quit the Simulation, enter 'q':")
     if n.strip() == 'q':
         break
 
-try:
-    print [method for method in dir(wEnv) if callable(getattr(wEnv, method))]
-except:
-    raise
+#try:
+    #print [method for method in dir(wEnv) if callable(getattr(wEnv, method))]
+#except:
+    #raise
 
 #wEnv.is_done()
-print wEnv.percept(explorer)
+print('Sense the environment', wEnv.percept(explorer))
+#print wEnv.percept(explorer)
 percept2 = wEnv.percept(explorer)
 pvec = explorer.raw_percepts_to_percept_vector(percept2)
 print explorer.pretty_percept_vector(pvec);
@@ -2816,4 +2842,8 @@ print plWumpus.program(percept)
 
 
 print ('\n-------------------------5. Test Agent----------------\n')
-#wEnv.test_agent(2, wEnv)
+steps = 0
+steps = raw_input("\nEnter in the number of steps you want to run ")
+steps = steps.strip()
+print 'Number of Steps: ' % steps
+test_agent(explorer, steps, wEnv) 
