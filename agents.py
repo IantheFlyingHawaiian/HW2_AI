@@ -466,7 +466,8 @@ def compare_agents(EnvFactory, AgentFactories, n = 10, steps = 1000):
     Create n instances of the environment, and run each agent in copies of
     each one for steps. Return a list of (agent, average-score) tuples."""
     envs = [ EnvFactory() for i in range(n) ]
-    return [ (A, test_agent(A, steps, copy.deepcopy(envs))) for A in AgentFactories ]
+    return [ (A, 
+    (A, steps, copy.deepcopy(envs))) for A in AgentFactories ]
 
 
 def test_agent(AgentFactory, steps, envs):
@@ -1311,7 +1312,7 @@ class WumpusEnvironment(XYEnvironment):
         self.entrance = entrance
         self.add_walls()
         #self.add_things()
-        self.time_step = 2
+        self.time_step = 0
         self.done = False
         self.global_percept_events = []
         #self.add_thing(Wumpus(),(1,3))
@@ -1383,6 +1384,9 @@ class WumpusEnvironment(XYEnvironment):
             if isinstance(thing, Gold):
                 if agent.location == thing.location:
                     percepts.append('Gold')
+            elif isinstance(thing, Wumpus):
+                if agent.location == thing.location:
+                    percepts.append('Wumpus')
             else:
                 percepts.append(self.thing_percept(thing, agent))
 
@@ -1539,6 +1543,15 @@ class WumpusEnvironment(XYEnvironment):
 
         return ''.join(slist)
 
+    def test_agent(AgentFactory, steps, envs):
+        "Return the mean score of running an agent in each of the envs, for steps"
+        total = 0
+        for env in envs:
+            agent = AgentFactory()
+            env.add_object(agent)
+            env.run(steps)
+            total += agent.performance
+        return float(total)/len(envs)
 #______________________________________________________________________________
 
 class KB(object):
@@ -2753,12 +2766,23 @@ print
 print wEnv.to_string()
 #explorer = W.Explorer(heading='north', verbose=True)
 
+#print 'Step made'
+#print wEnv.to_string()
 
 percept2 = wEnv.percept(explorer)
 #enviro.to_string
 #percept_vector = [None, None, None, None, None]
 #print explorer.pretty_percept_vector(percept_vector)
 print wEnv.percept(explorer)
+print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
+wEnv.step()
+print wEnv.percept(explorer)
+print wEnv.to_string()
+while(1):
+    print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
+    wEnv.step()
+    print wEnv.percept(explorer)
+    print wEnv.to_string()
 
 try:
     print [method for method in dir(wEnv) if callable(getattr(wEnv, method))]
@@ -2779,3 +2803,7 @@ percept  = 'glitter'
 print ('PLWumpus Agent percept: %s' % percept) 
 plWumpus.program(percept)
 print plWumpus.program(percept)
+
+
+print ('\n-------------------------5. Test Agent----------------\n')
+#wEnv.test_agent(2, wEnv)
