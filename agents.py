@@ -486,7 +486,9 @@ def test_agent(AgentFactory, steps, envs):
 def test_agent(explorer, steps, wEnv):
     """Return the mean score of running an agent in each of the envs, for steps"""
     count = 0
-    while(count <= steps):
+    print 'STEPS %d' % steps
+    print wEnv.to_string()
+    while(count < steps - 1):
         print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
         wEnv.step()
         print wEnv.percept(explorer)
@@ -497,6 +499,7 @@ def test_agent(explorer, steps, wEnv):
         senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
         print 'Environment', senses;
         count = count + 1
+        
     def score(env):
         agent = AgentFactory()
         env.add_thing(agent)
@@ -2797,10 +2800,12 @@ percept2 = wEnv.percept(explorer)
 #enviro.to_string
 #percept_vector = [None, None, None, None, None]
 #print explorer.pretty_percept_vector(percept_vector)
-print wEnv.percept(explorer)
-print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
+#print wEnv.percept(explorer)
+#print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
 #wEnv.step()
 print wEnv.percept(explorer)
+pvec = explorer.raw_percepts_to_percept_vector(percept2)
+print explorer.pretty_percept_vector(pvec);
 print wEnv.to_string()
 print('-------------------------Manual Simulation----------------\n')
 while(True):
@@ -2824,7 +2829,7 @@ while(True):
 
 #wEnv.is_done()
 print('Sense the environment', wEnv.percept(explorer))
-#print wEnv.percept(explorer)
+print wEnv.percept(explorer)
 percept2 = wEnv.percept(explorer)
 pvec = explorer.raw_percepts_to_percept_vector(percept2)
 print explorer.pretty_percept_vector(pvec);
@@ -2845,5 +2850,6 @@ print ('\n-------------------------5. Test Agent----------------\n')
 steps = 0
 steps = raw_input("\nEnter in the number of steps you want to run ")
 steps = steps.strip()
-print 'Number of Steps: ' % steps
+print 'Number of Steps: %s' % steps
+steps = int(steps)
 test_agent(explorer, steps, wEnv) 
