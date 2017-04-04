@@ -488,8 +488,9 @@ def test_agent(explorer, steps, wEnv):
     count = 0
     print 'STEPS %d' % steps
     print wEnv.to_string()
+    print '\n------------------------------  --------------------------\n'
     while(count < steps - 1):
-        print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
+        print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Release, Shoot, Wait] '
         wEnv.step()
         print wEnv.percept(explorer)
         print wEnv.to_string()
@@ -498,6 +499,7 @@ def test_agent(explorer, steps, wEnv):
         pvec = explorer.raw_percepts_to_percept_vector(percept2)
         senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
         print 'Environment', senses;
+        print '\n------------------------------  --------------------------\n'
         count = count + 1
         
     def score(env):
@@ -759,7 +761,7 @@ def with_manual_program(agent):
 
     helping  = ['?', 'help']
     stopping = ['quit', 'stop', 'exit']
-    actions  = ['TurnRight', 'TurnLeft', 'Forward', 'Grab', 'Climb', 'Shoot', 'Wait']
+    actions  = ['TurnRight', 'TurnLeft', 'Forward', 'Grab', 'Release', 'Shoot', 'Wait']
 
     def show_commands():
         print "   The following are valid Hunt The Wumpus action:"
@@ -813,7 +815,7 @@ def with_manual_kb_program(agent):
 
     helping = ['?', 'help']
     stopping = ['quit', 'stop', 'exit']
-    actions = ['TurnRight', 'TurnLeft', 'Forward', 'Grab', 'Climb', 'Shoot', 'Wait']
+    actions = ['TurnRight', 'TurnLeft', 'Forward', 'Grab', 'Release', 'Shoot', 'Wait']
     queries = [('qp','Query a single proposition;\n' \
                 + '           E.g. \'qp B1_1\' or \'qp OK1_1_3\', \'qp HeadingWest4\''),
                ('qpl','Query a-temporal location-based proposition at all x,y locations;\n' \
@@ -1333,7 +1335,7 @@ def TraceAgent(agent):
 #-----Wumpus Environment-------------------------------
 class WumpusEnvironment(XYEnvironment):
 
-    def __init__(self, width = 5, height = 5, entrance = (1, 3)):
+    def __init__(self, width = 5, height = 5, entrance = (1, 1)):
         """ NOTE: range from 1 to {width or height} contains map,
         anything outside, 0 and {width+1 or height+1} becomes a wall """
         super(WumpusEnvironment, self).__init__(width + 1, height + 1)
@@ -1401,6 +1403,19 @@ class WumpusEnvironment(XYEnvironment):
             v = (1, 0)
         return v
         
+    def heading_to_str(self, heading):
+        """ Convert heading into vector that can be added to location
+        if agent moves Forward """
+        if heading == 0:
+            v = 'North'
+        elif heading == 1:
+            v = 'West'
+        elif heading == 2:
+            v = 'South'
+        elif heading == 3:
+            v = 'East'
+        return v
+        
     def percept(self, agent):
         """By default, agent perceives things within a default radius."""
         return [ self.thing_percept(thing, agent) for thing in self.things_near(agent.location) ]
@@ -1429,6 +1444,7 @@ class WumpusEnvironment(XYEnvironment):
         """ Execute action taken by agent """
         agent.bump = False
         agent.performance_measure -= 1
+        
         if action == 'TurnRight':
             agent.heading = self.turn_heading(agent.heading, -1)
         elif action == 'TurnLeft':
@@ -1448,7 +1464,7 @@ class WumpusEnvironment(XYEnvironment):
                     print 'Gold?:', self.list_things_at(agent.location, tclass=Gold)
                     sys.exit(-1)
 
-        elif action == 'Climb':
+        elif action == 'Release':
             if agent.location == self.entrance:
                 if agent.has_gold:
                     agent.performance_measure += 1000
@@ -1460,6 +1476,12 @@ class WumpusEnvironment(XYEnvironment):
                 self.shoot_arrow(agent)
         elif action == 'Stop':
             self.done = True
+        
+        print '\nCurrent Location: ', agent.location
+        print 'Heading: ', self.heading_to_str(agent.heading)
+        print '\nReminder- Start Location:', self.entrance
+        print ''
+        print 'Percepts'
 
     def shoot_arrow(self, agent):
         dvec = self.heading_to_vector(agent.heading)
@@ -2801,15 +2823,19 @@ percept2 = wEnv.percept(explorer)
 #percept_vector = [None, None, None, None, None]
 #print explorer.pretty_percept_vector(percept_vector)
 #print wEnv.percept(explorer)
-#print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
+#print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Release, Shoot, Wait] '
 #wEnv.step()
 print wEnv.percept(explorer)
 pvec = explorer.raw_percepts_to_percept_vector(percept2)
-print explorer.pretty_percept_vector(pvec);
+senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]
+print senses;
+
+print('\n-------------------------Manual Simulation----------------\n')
 print wEnv.to_string()
-print('-------------------------Manual Simulation----------------\n')
+
+print '\n------------------------------ --------------------------\n'
 while(True):
-    print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
+    print 'Ending actions: [quit, stop, exit] Possible actions = [TurnRight, TurnLeft, Forward, Grab, Release, Shoot, Wait] '
     wEnv.step()
     print wEnv.percept(explorer)
     print wEnv.to_string()
@@ -2818,7 +2844,9 @@ while(True):
     pvec = explorer.raw_percepts_to_percept_vector(percept2)
     senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
     print 'Environment', senses;
-    n = raw_input("\nTo quit the Simulation, enter 'q':")
+    print '\n------------------------------  --------------------------\n'
+    
+    n = raw_input("To quit the Simulation, enter 'q':")
     if n.strip() == 'q':
         break
 
