@@ -285,7 +285,7 @@ class WumpusEnvironment(agents.XYEnvironment):
         """By default, agent perceives things within a default radius."""
         return [ self.thing_percept(thing, agent) for thing in self.things_near(agent.location) ]
 
-    def peanut(self, agent):
+    def percept2(self, agent):
         """ Each percept is a list beginning with the time_step (integer) """
         percepts = [self.time_step]
         for thing in self.things_near(agent.location):

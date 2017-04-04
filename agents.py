@@ -2775,14 +2775,22 @@ percept2 = wEnv.percept(explorer)
 #print explorer.pretty_percept_vector(percept_vector)
 print wEnv.percept(explorer)
 print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
-wEnv.step()
+#wEnv.step()
 print wEnv.percept(explorer)
 print wEnv.to_string()
-while(1):
+print('-------------------------Manual Simulation----------------')
+while(True):
     print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Climb, Shoot, Wait] '
     wEnv.step()
     print wEnv.percept(explorer)
     print wEnv.to_string()
+    print wEnv.percept(explorer)
+    percept2 = wEnv.percept(explorer)
+    pvec = explorer.raw_percepts_to_percept_vector(percept2)
+    print explorer.pretty_percept_vector(pvec);
+    n = raw_input("\nTo quit the Simulation, enter 'q':")
+    if n.strip() == 'q':
+        break
 
 try:
     print [method for method in dir(wEnv) if callable(getattr(wEnv, method))]
@@ -2790,9 +2798,11 @@ except:
     raise
 
 #wEnv.is_done()
-#print wEnv.percept(explorer)
+print wEnv.percept(explorer)
+percept2 = wEnv.percept(explorer)
+pvec = explorer.raw_percepts_to_percept_vector(percept2)
+print explorer.pretty_percept_vector(pvec);
 
-#print explorer.raw_percepts_to_percept_vector(percept2)
 
 
 
