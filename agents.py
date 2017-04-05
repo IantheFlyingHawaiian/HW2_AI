@@ -470,15 +470,22 @@ def compare_agents(EnvFactory, AgentFactories, n = 10, steps = 1000):
     (A, steps, copy.deepcopy(envs))) for A in AgentFactories ]
 
 
-def test_agent(AgentFactory, steps, envs):
+def test_agent(AgentFactory, steps, envs, percepts):
     """Return the mean score of running an agent in each of the envs, for steps"""
     print ('RUN TEST AGENT')
     envs.add_thing(AgentFactory)
-    envs.run(steps)
-    print envs.to_string()
+    #envs.run(steps)
+    
+    agent = AgentFactory
+    agent.program(percept)
+    #envs.run(steps)
+    envs.runPLWumpus(agent, steps)
+    #envs.runPLWumpus(steps)
+    print(agent.KB.clauses)
+    #print envs.to_string()
     print('test_agent', envs)
-    print(AgentFactor.clauses)
-    return AgentFactory.performance
+    #print agent.KB.clauses
+    return agent.performance
 
     def score(env):
         agent = AgentFactory()
@@ -1361,6 +1368,7 @@ class WumpusEnvironment(XYEnvironment):
         print '\nReminder- Start Location:', self.entrance
         print ''
         print 'Percepts'
+        
 
     def shoot_arrow(self, agent):
         dvec = self.heading_to_vector(agent.heading)
@@ -1383,7 +1391,15 @@ class WumpusEnvironment(XYEnvironment):
                 break
             if 0 > aloc[0] > self.width or 0 > aloc[1] > self.height:
                 break
-    
+                
+    def runPLWumpus(self, agent, steps = 1000):
+        """Run the Environment for given number of time steps."""
+        for step in range(steps):
+            if self.is_done():
+                return
+            self.step()
+            agent.program(percept)
+
 
     def run_verbose(self, steps = 10):
         """Run environment while displaying ascii map, for given number of steps."""
@@ -2205,8 +2221,8 @@ def extract_solution(model):
 class PLWumpusAgent(Agent):
     "An agent for the wumpus world that does logical inference. [Fig. 7.19]"""
     def __init__(self):
-        KB = FOLKB()
-        self.x, self.y, self.orientation = 1, 1, (1, 0)
+        self.KB = FOLKB()
+        self.x, self.y, self.orientation = 2, 3, (1, 0)
         self.visited = set() ## squares already visited
         self.action = None
         self.performance_measure = 0;
@@ -2217,22 +2233,26 @@ class PLWumpusAgent(Agent):
             stench = percept
             breeze = percept
             glitter = percept
+
+            
             x, y, orientation = update_position(self.x, self.y, self.orientation, self.action)
         
             
-            KB.tell(expr('%sS_%d%d' % (if_(stench, '', '~'), self.x, self.y)))
-            KB.tell(expr('%sB_%d%d' % (if_(breeze, '', '~'), self.x, self.y)))
-            print(KB.clauses)
+            self.KB.tell(expr('%sS_%d%d' % (if_(stench, '', '~'), self.x, self.y)))
+            self.KB.tell(expr('%sB_%d%d' % (if_(breeze, '', '~'), self.x, self.y)))
+            self.KB.tell(expr('%sGl_%d%d' % (if_(glitter, '', '~'), self.x, self.y)))
+            
+            
             if glitter: action = 'Grab'
             elif plan: action = plan.pop()
             else:
                 for [i, j] in fringe(visited):
-                    if KB.ask('~P_%d,%d & ~W_%d,%d' % (i, j, i, j)) != False:
+                    if self.KB.ask('~P_%d,%d & ~W_%d,%d' % (i, j, i, j)) != False:
                         raise NotImplementedError
-                    KB.ask('~P_%d,%d | ~W_%d,%d' % (i, j, i, j)) != False 
+                    self.KB.ask('~P_%d,%d | ~W_%d,%d' % (i, j, i, j)) != False 
             if self.action == None: 
                 action = random.choice(['Forward', 'Right', 'Left'])
-            return action
+            return action 
 
         self.program = program
 
@@ -2650,6 +2670,7 @@ explorer = Explorer(heading='north', verbose=True)
 explorer.heading = 0 #North
 wEnv.add_thing(explorer, (2,2))
 print 'Explorer Location: ', explorer.location
+plWumpus = PLWumpusAgent()
 
 #explorer = W.Explorer(heading='north', verbose=True)
 
@@ -2681,6 +2702,7 @@ while(True):
     percept2 = wEnv.percept(explorer)
     pvec = explorer.raw_percepts_to_percept_vector(percept2)
     senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
+    
     print 'Environment', senses;
     print '\n------------------------------  --------------------------\n'
     
@@ -2711,6 +2733,8 @@ percept  = 'glitter'
 print ('PLWumpus Agent percept: %s' % percept) 
 plWumpus.program(percept)
 print plWumpus.program(percept)
+print plWumpus.KB.clauses
+print 'PLWumpus location: ', plWumpus.x, plWumpus.y
 
 
 print ('\n-------------------------5. Test Agent----------------\n')
@@ -2721,5 +2745,6 @@ print 'Number of Steps: %s' % steps
 steps = int(steps)
 #test_agent(explorer, steps, wEnv)
 e = [wEnv] 
-test_agent(plWumpus, 3, wEnv)
+plWumpus.program(senses[2])
+test_agent(plWumpus, 3, wEnv, senses)
 
