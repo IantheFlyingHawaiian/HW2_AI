@@ -481,6 +481,7 @@ def test_agent(AgentFactory, steps, envs, percepts):
     #envs.run(steps)
     envs.runPLWumpus(agent, steps)
     #envs.runPLWumpus(steps)
+    print(' ------------PLWumpus test agent KB-----------------------')
     print(agent.KB.clauses)
     #print envs.to_string()
     print('test_agent', envs)
@@ -1365,9 +1366,9 @@ class WumpusEnvironment(XYEnvironment):
         
         print '\nCurrent Location: ', agent.location
         print 'Heading: ', self.heading_to_str(agent.heading)
-        print '\nReminder- Start Location:', self.entrance
+        print 'Reminder- Start Location:', self.entrance
         print ''
-        print 'Percepts'
+        print 'Percepts:'
         
 
     def shoot_arrow(self, agent):
@@ -2251,7 +2252,7 @@ class PLWumpusAgent(Agent):
                         raise NotImplementedError
                     self.KB.ask('~P_%d,%d | ~W_%d,%d' % (i, j, i, j)) != False 
             if self.action == None: 
-                action = random.choice(['Forward', 'Right', 'Left'])
+                action = random.choice(['Forward', 'TurnRight', 'TurnLeft'])
             return action 
 
         self.program = program
@@ -2678,12 +2679,7 @@ plWumpus = PLWumpusAgent()
 #print wEnv.to_string()
 print '-------------------------#2&3 Percept, Sense the Environment---------\n'
 percept2 = wEnv.percept(explorer)
-#enviro.to_string
-#percept_vector = [None, None, None, None, None]
-#print explorer.pretty_percept_vector(percept_vector)
-#print wEnv.percept(explorer)
-#print 'Possible actions: [quit, stop, exit] actions = [TurnRight, TurnLeft, Forward, Grab, Release, Shoot, Wait] '
-#wEnv.step()
+
 print wEnv.percept(explorer)
 pvec = explorer.raw_percepts_to_percept_vector(percept2)
 senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]
@@ -2726,10 +2722,12 @@ print 'Environment', senses;
 
 
 
-print ('\n-------------------------4. PLWumpusAgent----------------\n')
+print ('\n-------------------------4. Create PLWumpusAgent----------------\n')
+
+#Creat the Wumpus Agent
 plWumpus = PLWumpusAgent()
 print plWumpus
-percept  = 'glitter'
+percept  = 'stench'
 print ('PLWumpus Agent percept: %s' % percept) 
 plWumpus.program(percept)
 print plWumpus.program(percept)
@@ -2746,5 +2744,6 @@ steps = int(steps)
 #test_agent(explorer, steps, wEnv)
 e = [wEnv] 
 plWumpus.program(senses[2])
-test_agent(plWumpus, 3, wEnv, senses)
-
+performance = test_agent(plWumpus, 3, wEnv, senses)
+print performance
+print '-------------------------------End --------------------------------'
