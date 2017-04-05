@@ -294,7 +294,7 @@ class XYEnvironment(Environment):
         if radius is None:
             radius = self.perceptible_distance
         radius2 = radius * radius
-        return [ thing for thing in self.things if distance2(location, thing.location) <= radius2 ]
+        return [ thing for thing in self.things if distance2(location, thing.location) == radius2 ]
 
     perceptible_distance = 1
 
@@ -472,6 +472,13 @@ def compare_agents(EnvFactory, AgentFactories, n = 10, steps = 1000):
 
 def test_agent(AgentFactory, steps, envs):
     """Return the mean score of running an agent in each of the envs, for steps"""
+    print ('RUN TEST AGENT')
+    envs.add_thing(AgentFactory)
+    envs.run(steps)
+    print envs.to_string()
+    print('test_agent', envs)
+    print(AgentFactor.clauses)
+    return AgentFactory.performance
 
     def score(env):
         agent = AgentFactory()
@@ -483,7 +490,7 @@ def test_agent(AgentFactory, steps, envs):
     #return mean(map(score, envs))
     return None
 
-def test_agent(explorer, steps, wEnv):
+'''def test_agent(explorer, steps, wEnv):
     """Return the mean score of running an agent in each of the envs, for steps"""
     count = 0
     print 'STEPS %d' % steps
@@ -500,83 +507,11 @@ def test_agent(explorer, steps, wEnv):
         senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
         print 'Environment', senses;
         print '\n------------------------------  --------------------------\n'
-        count = count + 1
+        count = count + 1 '''
         
-    def score(env):
-        agent = AgentFactory()
-        env.add_thing(agent)
-        env.run(steps)
-        print('test_agent' , env)
-        return agent.performance
-
-    #return mean(map(score, envs))
-    return None
 
 
-__doc__ += "\n>>> a = ReflexVacuumAgent()\n>>> a.program((loc_A, 'Clean'))\n'Right'\n>>> a.program((loc_B, 'Clean'))\n'Left'\n>>> a.program((loc_A, 'Dirty'))\n'Suck'\n>>> a.program((loc_A, 'Dirty'))\n'Suck'\n\n>>> e = TrivialVacuumEnvironment()\n>>> e.add_thing(ModelBasedVacuumAgent())\n>>> e.run(5)\n\n## Environments, and some agents, are randomized, so the best we can\n## give is a range of expected scores.  If this test fails, it does\n## not necessarily mean something is wrong.\n>>> envs = [TrivialVacuumEnvironment() for i in range(100)]\n>>> def testv(A): return test_agent(A, 4, copy.deepcopy(envs))\n>>> 7 < testv(ModelBasedVacuumAgent) < 11\nTrue\n>>> 5 < testv(ReflexVacuumAgent) < 9\nTrue\n>>> 2 < testv(TableDrivenVacuumAgent) < 6\nTrue\n>>> 0.5 < testv(RandomVacuumAgent) < 3\nTrue\n"
-import Tkinter as tk
 
-class EnvGUI(tk.Tk, object):
-
-    def __init__(self, env, title = 'AIMA GUI', cellwidth = 50, n = 10):
-        super(EnvGUI, self).__init__()
-        self.title(title)
-        canvas = EnvCanvas(self, env, cellwidth, n)
-        toolbar = EnvToolbar(self, env, canvas)
-        for w in [canvas, toolbar]:
-            w.pack(side='bottom', fill='x', padx='3', pady='3')
-
-
-class EnvToolbar(tk.Frame, object):
-
-    def __init__(self, parent, env, canvas):
-        super(EnvToolbar, self).__init__(parent, relief='raised', bd=2)
-        self.env = env
-        self.canvas = canvas
-        self.running = False
-        self.speed = 1.0
-        for txt, cmd in [('Step >', self.env.step),
-         ('Run >>', self.run),
-         ('Stop [ ]', self.stop),
-         ('List things', self.list_things),
-         ('List agents', self.list_agents)]:
-            tk.Button(self, text=txt, command=cmd).pack(side='left')
-
-        tk.Label(self, text='Speed').pack(side='left')
-        scale = tk.Scale(self, orient='h', from_=1.0, to=10.0, resolution=1.0, command=self.set_speed)
-        scale.set(self.speed)
-        scale.pack(side='left')
-
-    def run(self):
-        print 'run'
-        self.running = True
-        self.background_run()
-
-    def stop(self):
-        print 'stop'
-        self.running = False
-
-    def background_run(self):
-        if self.running:
-            self.env.step()
-            delay_sec = 1.0 / max(self.speed, 1.0)
-            ms = int(1000.0 * delay_sec)
-            self.after(ms, self.background_run)
-
-    def list_things(self):
-        print 'Things in the environment:'
-        for thing in self.env.things:
-            print '%s at %s' % (thing, thing.location)
-
-    def list_agents(self):
-        print 'Agents in the environment:'
-        for agt in self.env.agents:
-            print '%s at %s' % (agt, agt.location)
-
-    def set_speed(self, speed):
-        self.speed = float(speed)
-
-    
 
 #-------------------------------------------------------------------------------
 # Wumpus World Scenarios
@@ -632,62 +567,6 @@ class WumpusWorldScenario(object):
         print self.objects   
         return env
 
-    def load_layout(self, layout_file):
-        """
-        Load text file specifying Wumpus Environment initial configuration
-        Text file is N (rows) by M (columns) grid where each cell in a row
-        consists of M comma-separated cells specs, where each cell contains
-        either:
-           '.' : space (really just a placeholder)
-        or a one or more of (although typically just have one per cell):
-           'W' : wumpus
-           'P' : pit
-           'G' : gold
-           'A' : wumpus hunter agent (heading specified in agent object)
-        """
-        
-        if layout_file.endswith('.lay'):
-            layout = self.tryToLoad('layouts/' + layout_file)
-            if not layout: layout = self.tryToLoad(layout_file)
-        else:
-            layout = self.tryToLoad('layouts/' + layout_file + '.lay')
-            if not layout: layout = self.tryToLoad(layout_file + '.lay')
-
-        if not layout:
-            raise Exception("Could not find layout file: {0}".format(layout_file))
-
-        print "Loaded layout '{0}'".format(layout_file)
-
-        objects = []
-        entrance = (1,2) # default entrance location
-        
-        ri = len(layout)
-        largest_ci = 0
-        for row in layout:
-            ci = 0
-            if row:
-                ri -= 1
-                row = row.split(',')
-                for cell in row:
-                    ci += 1
-                    if ci > largest_ci: largest_ci = ci
-                    for char in cell:
-                        if char == 'W':
-                            objects.append((Wumpus(),(ci,ri)))
-                        elif char == 'P':
-                            objects.append((Pit(),(ci,ri)))
-                        elif char == 'G':
-                            objects.append((Gold(),(ci,ri)))
-                        elif char == 'A':
-                            entrance = (ci,ri)
-
-        return objects, largest_ci, len(layout)-ri, entrance
-
-    def tryToLoad(self, fullname):
-        if (not os.path.exists(fullname)): return None
-        f = open(fullname)
-        try: return [line.strip() for line in f]
-        finally: f.close()
 
     def step(self):
         self.env.step()
@@ -1140,7 +1019,7 @@ class Wumpus(Thing):
 class Wall(Obstacle):
 
     def to_string(self):
-        return '#'
+        return '[]'
 
 
 class Pit(Thing):
@@ -1688,50 +1567,6 @@ def KB_AgentProgram(KB):
 #______________________________________________________________________________
 
 class Expr:
-    """A symbolic mathematical expression.  We use this class for logical
-    expressions, and for terms within logical expressions. In general, an
-    Expr has an op (operator) and a list of args.  The op can be:
-      Null-ary (no args) op:
-        A number, representing the number itself.  (e.g. Expr(42) => 42)
-        A symbol, representing a variable or constant (e.g. Expr('F') => F)
-      Unary (1 arg) op:
-        '~', '-', representing NOT, negation (e.g. Expr('~', Expr('P')) => ~P)
-      Binary (2 arg) op:
-        '>>', '<<', representing forward and backward implication
-        '+', '-', '*', '/', '**', representing arithmetic operators
-        '<', '>', '>=', '<=', representing comparison operators
-        '<=>', '^', representing logical equality and XOR
-      N-ary (0 or more args) op:
-        '&', '|', representing conjunction and disjunction
-        A symbol, representing a function term or FOL proposition
-
-    Exprs can be constructed with operator overloading: if x and y are Exprs,
-    then so are x + y and x & y, etc.  Also, if F and x are Exprs, then so is
-    F(x); it works by overloading the __call__ method of the Expr F.  Note
-    that in the Expr that is created by F(x), the op is the str 'F', not the
-    Expr F.   See http://www.python.org/doc/current/ref/specialnames.html
-    to learn more about operator overloading in Python.
-
-    WARNING: x == y and x != y are NOT Exprs.  The reason is that we want
-    to write code that tests 'if x == y:' and if x == y were the same
-    as Expr('==', x, y), then the result would always be true; not what a
-    programmer would expect.  But we still need to form Exprs representing
-    equalities and disequalities.  We concentrate on logical equality (or
-    equivalence) and logical disequality (or XOR).  You have 3 choices:
-        (1) Expr('<=>', x, y) and Expr('^', x, y)
-            Note that ^ is bitwose XOR in Python (and Java and C++)
-        (2) expr('x <=> y') and expr('x =/= y').
-            See the doc string for the function expr.
-        (3) (x % y) and (x ^ y).
-            It is very ugly to have (x % y) mean (x <=> y), but we need
-            SOME operator to make (2) work, and this seems the best choice.
-
-    WARNING: if x is an Expr, then so is x + 1, because the int 1 gets
-    coerced to an Expr by the constructor.  But 1 + x is an error, because
-    1 doesn't know how to add an Expr.  (Adding an __radd__ method to Expr
-    wouldn't help, because int.__add__ is still called first.) Therefore,
-    you should use Expr(1) + x instead, or ONE + x, or expr('1 + x').
-    """
 
     def __init__(self, op, *args):
         "Op is a string or number; args are Exprs (or are coerced to Exprs)."
@@ -2374,6 +2209,8 @@ class PLWumpusAgent(Agent):
         self.x, self.y, self.orientation = 1, 1, (1, 0)
         self.visited = set() ## squares already visited
         self.action = None
+        self.performance_measure = 0;
+        self.heading = 0;
         plan = []
 
         def program(percept):
@@ -2385,6 +2222,7 @@ class PLWumpusAgent(Agent):
             
             KB.tell(expr('%sS_%d%d' % (if_(stench, '', '~'), self.x, self.y)))
             KB.tell(expr('%sB_%d%d' % (if_(breeze, '', '~'), self.x, self.y)))
+            print(KB.clauses)
             if glitter: action = 'Grab'
             elif plan: action = plan.pop()
             else:
@@ -2856,11 +2694,12 @@ while(True):
     #raise
 
 #wEnv.is_done()
-print('Sense the environment', wEnv.percept(explorer))
+print 'Sense the environment', wEnv.percept(explorer)
 print wEnv.percept(explorer)
 percept2 = wEnv.percept(explorer)
 pvec = explorer.raw_percepts_to_percept_vector(percept2)
-print explorer.pretty_percept_vector(pvec);
+senses = [explorer.pretty_percept_vector(pvec)[5], explorer.pretty_percept_vector(pvec)[6], explorer.pretty_percept_vector(pvec)[7], explorer.pretty_percept_vector(pvec)[8], explorer.pretty_percept_vector(pvec)[9]]   
+print 'Environment', senses;
 
 
 
@@ -2880,4 +2719,7 @@ steps = raw_input("\nEnter in the number of steps you want to run ")
 steps = steps.strip()
 print 'Number of Steps: %s' % steps
 steps = int(steps)
-test_agent(explorer, steps, wEnv) 
+#test_agent(explorer, steps, wEnv)
+e = [wEnv] 
+test_agent(plWumpus, 3, wEnv)
+
